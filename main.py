@@ -177,152 +177,152 @@ def predict_next_note(notes: np.ndarray,
 
 if __name__ == '__main__':
 
-    # # -------------------------------------------------------------------------------------------
-    # # Loading Data + Feature Extraction
-    # # -------------------------------------------------------------------------------------------
-    #
-    # for cnt_complexity in range(1, COMPLEXITY_LEVEL_NUMBER + 1):
-    #     all_notes = []
-    #     print(cnt_complexity)
-    #     temp_dir = DIRECTORY + "{:02d}".format(cnt_complexity)
-    #     dir_list = os.listdir(temp_dir)
-    #     # dir_list = [dir_list[0]]  # to choose a desired sample
-    #     cnt_file = 0
-    #     for filename in dir_list:
-    #         if filename[-3:] == 'mid':
-    #             cnt_file += 1
-    #             midi_file_path = temp_dir + '/' + filename
-    #
-    #             pm = pretty_midi.PrettyMIDI(midi_file_path)
-    #
-    #             # some inspection on the MIDI file
-    #             # print('Number of instruments:', len(pm.instruments))
-    #             instrument = pm.instruments[0]
-    #             instrument_name = pretty_midi.program_to_instrument_name(instrument.program)
-    #             # print('Instrument name:', instrument_name)
-    #
-    #             # # Extract notes
-    #             # # three variables to represent a note when training the model: pitch, step and duration.
-    #             # # The pitch is the perceptual quality of the sound as a MIDI note number.
-    #             # # The step is the time elapsed from the previous note or start of the track.
-    #             # # The duration is how long the note will be playing in seconds. (note end - start time).
-    #             # print()
-    #             # for i, note in enumerate(instrument.notes[:10]):
-    #             #     note_name = pretty_midi.note_number_to_name(note.pitch)
-    #             #     duration = note.end - note.start
-    #             #     print(f'{i}: pitch={note.pitch}, note_name={note_name},'
-    #             #           f' duration={duration:.4f}')
-    #             #
-    #             # raw_notes = midi_to_notes(midi_file_path)
-    #             #
-    #             # get_note_names = np.vectorize(pretty_midi.note_number_to_name)
-    #             # sample_note_names = get_note_names(raw_notes['pitch'])
-    #             #
-    #             # # Visualizing the musical piece, Pianoroll
-    #             # count = len(raw_notes['pitch'])
-    #             # print('\nSample note numbers:', count)
-    #             # plot_piano_roll(raw_notes, count=30)
-    #             # plot_piano_roll(raw_notes)
-    #             #
-    #             # # Note Distribution:
-    #             # plot_distributions(raw_notes)
-    #             #
-    #             # # Generate MIDI file
-    #             # example_file = 'example.midi'
-    #             # example_pm = notes_to_midi(raw_notes, out_file=example_file, instrument_name=instrument_name)
-    #
-    #             # Create the training dataset
-    #             notes = midi_to_notes(midi_file_path)
-    #             all_notes.append(notes)
-    #
-    #     all_notes = pd.concat(all_notes)
-    #     n_notes = len(all_notes)
-    #     print('Number of notes parsed for class:', n_notes)
-    #
-    #     # Creating a TF
-    #     key_order = ['pitch', 'step', 'duration']
-    #     train_notes = np.stack([all_notes[key] for key in key_order], axis=1)
-    #     notes_ds = tf.data.Dataset.from_tensor_slices(train_notes)
-    #     print(notes_ds.element_spec)
-    #
-    #     # Training the model on batches of sequences of notes.
-    #     # In this way, the model will be trained to predict the next note in a sequence.
-    #     seq_length = 25
-    #     vocab_size = 128
-    #     seq_ds = create_sequences(notes_ds, seq_length, vocab_size)
-    #     print(seq_ds.element_spec)
-    #
-    #     for seq, target in seq_ds.take(1):
-    #         print('sequence shape:', seq.shape)
-    #         print('sequence elements (first 10):', seq[0: 10])
-    #         print()
-    #         print('target:', target)
-    #
-    #     batch_size = 64
-    #     buffer_size = n_notes - seq_length  # the number of items in the dataset
-    #     train_ds = (seq_ds.shuffle(buffer_size)
-    #                 .batch(batch_size, drop_remainder=True)
-    #                 .cache()
-    #                 .prefetch(tf.data.experimental.AUTOTUNE))
-    #     print(train_ds.element_spec)
-    #
-    #     # Create and train the model
-    #     input_shape = (seq_length, 3)
-    #     learning_rate = 0.005
-    #
-    #     inputs = tf.keras.Input(input_shape)  # to instantiate a Keras tensor
-    #     x = tf.keras.layers.LSTM(128)(inputs)  # Units: 128, inputs: A 3D tensor with shape [batch, timesteps, feature]
-    #
-    #     outputs = {
-    #         'pitch': tf.keras.layers.Dense(128, name='pitch')(x),
-    #         'step': tf.keras.layers.Dense(1, name='step')(x),
-    #         'duration': tf.keras.layers.Dense(1, name='duration')(x),
-    #     }
-    #
-    #     model = tf.keras.Model(inputs, outputs)
-    #
-    #     loss = {
-    #         'pitch': tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    #         'step': mse_with_positive_pressure,
-    #         'duration': mse_with_positive_pressure,
-    #     }
-    #
-    #     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-    #     model.compile(loss=loss, optimizer=optimizer)
-    #
-    #     print(model.summary())
-    #
-    #     losses = model.evaluate(train_ds, return_dict=True)
-    #     print(losses)
-    #
-    #     model.compile(loss=loss,
-    #                   loss_weights={'pitch': 0.05,
-    #                                 'step': 1.0,
-    #                                 'duration': 1.0},
-    #                   optimizer=optimizer)
-    #
-    #     model.evaluate(train_ds, return_dict=True)
-    #
-    #     callbacks = [tf.keras.callbacks.ModelCheckpoint(filepath='./training_checkpoints/ckpt_{epoch}',
-    #                                                     save_weights_only=True),
-    #                  # to save the Keras model or model weights at some frequency
-    #                  tf.keras.callbacks.EarlyStopping(monitor='loss',
-    #                                                   patience=5,
-    #                                                   verbose=1,
-    #                                                   restore_best_weights=True)]
-    #
-    #     epochs = 100
-    #     history = model.fit(train_ds,
-    #                         epochs=epochs,
-    #                         callbacks=callbacks)
-    #
-    #     model_path = "./output/RNN_midi_" + "{:02d}".format(cnt_complexity) + ".h5"
-    #     model.save(model_path)
-    #
-    #     plt.figure()
-    #     plt.plot(history.epoch, history.history['loss'], label='total loss')
-    #     lossplot_path = "./output/RNN_midi_" + "{:02d}".format(cnt_complexity) + ".png"
-    #     plt.savefig(lossplot_path, bbox_inches='tight')
+    # -------------------------------------------------------------------------------------------
+    # Loading Data + Feature Extraction
+    # -------------------------------------------------------------------------------------------
+
+    for cnt_complexity in range(1, COMPLEXITY_LEVEL_NUMBER + 1):
+        all_notes = []
+        print(cnt_complexity)
+        temp_dir = DIRECTORY + "{:02d}".format(cnt_complexity)
+        dir_list = os.listdir(temp_dir)
+        # dir_list = [dir_list[0]]  # to choose a desired sample
+        cnt_file = 0
+        for filename in dir_list:
+            if filename[-3:] == 'mid':
+                cnt_file += 1
+                midi_file_path = temp_dir + '/' + filename
+
+                pm = pretty_midi.PrettyMIDI(midi_file_path)
+
+                # some inspection on the MIDI file
+                # print('Number of instruments:', len(pm.instruments))
+                instrument = pm.instruments[0]
+                instrument_name = pretty_midi.program_to_instrument_name(instrument.program)
+                # print('Instrument name:', instrument_name)
+
+                # # Extract notes
+                # # three variables to represent a note when training the model: pitch, step and duration.
+                # # The pitch is the perceptual quality of the sound as a MIDI note number.
+                # # The step is the time elapsed from the previous note or start of the track.
+                # # The duration is how long the note will be playing in seconds. (note end - start time).
+                # print()
+                # for i, note in enumerate(instrument.notes[:10]):
+                #     note_name = pretty_midi.note_number_to_name(note.pitch)
+                #     duration = note.end - note.start
+                #     print(f'{i}: pitch={note.pitch}, note_name={note_name},'
+                #           f' duration={duration:.4f}')
+                #
+                # raw_notes = midi_to_notes(midi_file_path)
+                #
+                # get_note_names = np.vectorize(pretty_midi.note_number_to_name)
+                # sample_note_names = get_note_names(raw_notes['pitch'])
+                #
+                # # Visualizing the musical piece, Pianoroll
+                # count = len(raw_notes['pitch'])
+                # print('\nSample note numbers:', count)
+                # plot_piano_roll(raw_notes, count=30)
+                # plot_piano_roll(raw_notes)
+                #
+                # # Note Distribution:
+                # plot_distributions(raw_notes)
+                #
+                # # Generate MIDI file
+                # example_file = 'example.midi'
+                # example_pm = notes_to_midi(raw_notes, out_file=example_file, instrument_name=instrument_name)
+
+                # Create the training dataset
+                notes = midi_to_notes(midi_file_path)
+                all_notes.append(notes)
+
+        all_notes = pd.concat(all_notes)
+        n_notes = len(all_notes)
+        print('Number of notes parsed for class:', n_notes)
+
+        # Creating a TF
+        key_order = ['pitch', 'step', 'duration']
+        train_notes = np.stack([all_notes[key] for key in key_order], axis=1)
+        notes_ds = tf.data.Dataset.from_tensor_slices(train_notes)
+        print(notes_ds.element_spec)
+
+        # Training the model on batches of sequences of notes.
+        # In this way, the model will be trained to predict the next note in a sequence.
+        seq_length = 25
+        vocab_size = 128
+        seq_ds = create_sequences(notes_ds, seq_length, vocab_size)
+        print(seq_ds.element_spec)
+
+        for seq, target in seq_ds.take(1):
+            print('sequence shape:', seq.shape)
+            print('sequence elements (first 10):', seq[0: 10])
+            print()
+            print('target:', target)
+
+        batch_size = 64
+        buffer_size = n_notes - seq_length  # the number of items in the dataset
+        train_ds = (seq_ds.shuffle(buffer_size)
+                    .batch(batch_size, drop_remainder=True)
+                    .cache()
+                    .prefetch(tf.data.experimental.AUTOTUNE))
+        print(train_ds.element_spec)
+
+        # Create and train the model
+        input_shape = (seq_length, 3)
+        learning_rate = 0.005
+
+        inputs = tf.keras.Input(input_shape)  # to instantiate a Keras tensor
+        x = tf.keras.layers.LSTM(128)(inputs)  # Units: 128, inputs: A 3D tensor with shape [batch, timesteps, feature]
+
+        outputs = {
+            'pitch': tf.keras.layers.Dense(128, name='pitch')(x),
+            'step': tf.keras.layers.Dense(1, name='step')(x),
+            'duration': tf.keras.layers.Dense(1, name='duration')(x),
+        }
+
+        model = tf.keras.Model(inputs, outputs)
+
+        loss = {
+            'pitch': tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+            'step': mse_with_positive_pressure,
+            'duration': mse_with_positive_pressure,
+        }
+
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        model.compile(loss=loss, optimizer=optimizer)
+
+        print(model.summary())
+
+        losses = model.evaluate(train_ds, return_dict=True)
+        print(losses)
+
+        model.compile(loss=loss,
+                      loss_weights={'pitch': 0.05,
+                                    'step': 1.0,
+                                    'duration': 1.0},
+                      optimizer=optimizer)
+
+        model.evaluate(train_ds, return_dict=True)
+
+        callbacks = [tf.keras.callbacks.ModelCheckpoint(filepath='./training_checkpoints/ckpt_{epoch}',
+                                                        save_weights_only=True),
+                     # to save the Keras model or model weights at some frequency
+                     tf.keras.callbacks.EarlyStopping(monitor='loss',
+                                                      patience=5,
+                                                      verbose=1,
+                                                      restore_best_weights=True)]
+
+        epochs = 100
+        history = model.fit(train_ds,
+                            epochs=epochs,
+                            callbacks=callbacks)
+
+        model_path = "./output/RNN_midi_" + "{:02d}".format(cnt_complexity) + ".h5"
+        model.save(model_path)
+
+        plt.figure()
+        plt.plot(history.epoch, history.history['loss'], label='total loss')
+        lossplot_path = "./output/RNN_midi_" + "{:02d}".format(cnt_complexity) + ".png"
+        plt.savefig(lossplot_path, bbox_inches='tight')
 
     print()
 
