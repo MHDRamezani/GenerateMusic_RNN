@@ -1,6 +1,6 @@
 """
 Author: Mohammad Ramezani
-Created: September 30, 2022
+Created: October 1, 2022
 """
 
 import collections
@@ -18,8 +18,8 @@ import seaborn as sns
 import tensorflow as tf
 from tensorflow import keras
 
-DIRECTORY = 'D:/Business/Idea_Music/Data/Original_Data/IMSLP_GenMusicSeq2Seq/'
-COMPLEXITY_LEVEL_NUMBER = 12
+DIRECTORY = 'D:/Business/Idea_Music/Data/Original_Data/GenMIDI_Test/'
+COMPLEXITY_LEVEL_NUMBER = 1
 
 seed = 42
 tf.random.set_seed(seed)
@@ -181,7 +181,7 @@ if __name__ == '__main__':
     # Loading Data + Feature Extraction
     # -------------------------------------------------------------------------------------------
 
-    for cnt_complexity in range(1, COMPLEXITY_LEVEL_NUMBER + 1):
+    for cnt_complexity in range(1, 2):  # COMPLEXITY_LEVEL_NUMBER + 1):
         all_notes = []
         print(cnt_complexity)
         temp_dir = DIRECTORY + "{:02d}".format(cnt_complexity)
@@ -247,7 +247,7 @@ if __name__ == '__main__':
 
         # Training the model on batches of sequences of notes.
         # In this way, the model will be trained to predict the next note in a sequence.
-        seq_length = 25
+        seq_length = 3
         vocab_size = 128
         seq_ds = create_sequences(notes_ds, seq_length, vocab_size)
         print(seq_ds.element_spec)
@@ -268,7 +268,7 @@ if __name__ == '__main__':
 
         # Create and train the model
         input_shape = (seq_length, 3)
-        learning_rate = 0.005
+        learning_rate = 0.01
 
         inputs = tf.keras.Input(input_shape)  # to instantiate a Keras tensor
         x = tf.keras.layers.LSTM(128)(inputs)  # Units: 128, inputs: A 3D tensor with shape [batch, timesteps, feature]
@@ -296,7 +296,7 @@ if __name__ == '__main__':
         print(losses)
 
         model.compile(loss=loss,
-                      loss_weights={'pitch': 0.05,
+                      loss_weights={'pitch': 0.01,
                                     'step': 1.0,
                                     'duration': 1.0},
                       optimizer=optimizer)
@@ -340,20 +340,21 @@ if __name__ == '__main__':
 
     # The temperature parameter can be used to control the randomness of notes generated.
     # to adjust the temperature parameter to generate more or less random predictions.
-    temperature = 10
-    num_predictions = 120
-    seq_length = 25
+    temperature = 5
+    num_predictions = 10
+    seq_length = 3
     vocab_size = 128
 
-    data_dir = 'D:/Business/Idea_Music/Data/Original_Data/IMSLP_GenMusicSeq2Seq/'
-    for cnt_complexity in range(1, COMPLEXITY_LEVEL_NUMBER + 1):
+    data_dir = 'D:/Business/Idea_Music/Data/Original_Data/GenMIDI_Test/'
+    for cnt_complexity in range(1, 2):  # COMPLEXITY_LEVEL_NUMBER + 1):
 
         os.mkdir('./sample_from_class_{:02d}'.format(cnt_complexity))
 
-        # Select random file from each directory
-        sample_dir = data_dir + os.listdir(data_dir)[cnt_complexity - 1]
-        sample_path = sample_dir + '/' + random.choice(os.listdir(sample_dir))
+        # # Select random file from each directory
+        # sample_dir = data_dir + os.listdir(data_dir)[cnt_complexity - 1]
+        # sample_path = sample_dir + '/' + random.choice(os.listdir(sample_dir))
 
+        sample_path = 'D:/Business/Idea_Music/Data/Original_Data/GenMIDI_Test/input.mid'
         pm = pretty_midi.PrettyMIDI(sample_path)
         instrument = pm.instruments[0]
         instrument_name = pretty_midi.program_to_instrument_name(instrument.program)
@@ -364,12 +365,12 @@ if __name__ == '__main__':
         # The initial sequence of notes; pitch is normalized similar to training sequences
         input_notes = (sample_notes[:seq_length] / np.array([vocab_size, 1, 1]))
 
-        for cnt_difficulty in range(1, COMPLEXITY_LEVEL_NUMBER + 1):
+        for cnt_difficulty in range(1, 2):  # COMPLEXITY_LEVEL_NUMBER + 1):
 
-            print(cnt_difficulty)
-            model_path = "./output/RNN_midi_" + "{:02d}".format(cnt_difficulty) + ".h5"
-            model = keras.models.load_model(model_path, custom_objects={"mse_with_positive_pressure":
-                                                                            mse_with_positive_pressure})
+            # print(cnt_difficulty)
+            # model_path = "./output/RNN_midi_" + "{:02d}".format(cnt_difficulty) + ".h5"
+            # model = keras.models.load_model(model_path, custom_objects={"mse_with_positive_pressure":
+            #                                                                 mse_with_positive_pressure})
 
             generated_notes = []
             prev_start = 0
