@@ -1,6 +1,6 @@
 """
 Author: Mohammad Ramezani
-Created: October 1, 2022
+Created: October 4, 2022
 """
 
 import collections
@@ -118,7 +118,7 @@ def create_sequences(dataset: tf.data.Dataset,
     seq_length = seq_length + 1
 
     # Take 1 extra for the labels
-    windows = dataset.window(seq_length, shift=1, stride=1, drop_remainder=True)
+    windows = dataset.window(seq_length, shift=1, stride=1, drop_remainder=True)  # Returns a dataset of "windows"
 
     # `flat_map` flattens the" dataset of datasets" into a dataset of tensors
     flatten = lambda x: x.batch(seq_length, drop_remainder=True)
@@ -180,6 +180,11 @@ if __name__ == '__main__':
     # -------------------------------------------------------------------------------------------
     # Loading Data + Feature Extraction
     # -------------------------------------------------------------------------------------------
+
+    seq_length = 6
+    vocab_size = 40
+    temperature = 2
+    num_predictions = 5
 
     for cnt_complexity in range(1, 2):  # COMPLEXITY_LEVEL_NUMBER + 1):
         all_notes = []
@@ -247,8 +252,6 @@ if __name__ == '__main__':
 
         # Training the model on batches of sequences of notes.
         # In this way, the model will be trained to predict the next note in a sequence.
-        seq_length = 3
-        vocab_size = 128
         seq_ds = create_sequences(notes_ds, seq_length, vocab_size)
         print(seq_ds.element_spec)
 
@@ -340,10 +343,6 @@ if __name__ == '__main__':
 
     # The temperature parameter can be used to control the randomness of notes generated.
     # to adjust the temperature parameter to generate more or less random predictions.
-    temperature = 5
-    num_predictions = 10
-    seq_length = 3
-    vocab_size = 128
 
     data_dir = 'D:/Business/Idea_Music/Data/Original_Data/GenMIDI_Test/'
     for cnt_complexity in range(1, 2):  # COMPLEXITY_LEVEL_NUMBER + 1):
