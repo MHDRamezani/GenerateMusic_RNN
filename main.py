@@ -1,6 +1,6 @@
 """
 Author: Mohammad Ramezani
-Created: October 4, 2022
+Created: October 9, 2022
 """
 
 import collections
@@ -165,6 +165,7 @@ def predict_next_note(notes: np.ndarray,
     pitch_logits /= temperature
     pitch = tf.random.categorical(pitch_logits, num_samples=1)
     pitch = tf.squeeze(pitch, axis=-1)
+    print(pitch)
     duration = tf.squeeze(duration, axis=-1)
     step = tf.squeeze(step, axis=-1)
 
@@ -184,7 +185,7 @@ if __name__ == '__main__':
     seq_length = 6
     vocab_size = 40
     temperature = 2
-    num_predictions = 5
+    num_predictions = 1
 
     for cnt_complexity in range(1, 2):  # COMPLEXITY_LEVEL_NUMBER + 1):
         all_notes = []
@@ -353,7 +354,7 @@ if __name__ == '__main__':
         # sample_dir = data_dir + os.listdir(data_dir)[cnt_complexity - 1]
         # sample_path = sample_dir + '/' + random.choice(os.listdir(sample_dir))
 
-        sample_path = 'D:/Business/Idea_Music/Data/Original_Data/GenMIDI_Test/input.mid'
+        sample_path = 'D:/Business/Idea_Music/Data/Original_Data/GenMIDI_Test_input/input_88_77.mid'
         pm = pretty_midi.PrettyMIDI(sample_path)
         instrument = pm.instruments[0]
         instrument_name = pretty_midi.program_to_instrument_name(instrument.program)
